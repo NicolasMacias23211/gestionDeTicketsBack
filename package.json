@@ -1,0 +1,23 @@
+{
+  "name": "e-seus-backend",
+  "version": "1.0.0",
+  "description": "API REST para el sistema de gestión de tickets E-SEUS",
+  "scripts": {
+    "start": "python manage.py runserver",
+    "migrate": "python manage.py migrate",
+    "makemigrations": "python manage.py makemigrations",
+    "createsuperuser": "python manage.py createsuperuser",
+    "test": "pytest",
+    "test:coverage": "pytest --cov=apps --cov-report=html",
+    "lint": "flake8",
+    "format": "black . && isort ."
+  },
+  "keywords": [
+    "django",
+    "rest-api",
+    "tickets",
+    "jwt"
+  ],
+  "author": "Nicolas Macias Duqe - Arquitecto AVA Emtelco - 2025",
+  "private": true
+}

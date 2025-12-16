@@ -1,0 +1,40 @@
+# Django Core
+Django>=5.0,<5.1
+python-decouple==3.8
+
+# Database
+# mysqlclient==2.2.4  # Requiere compilación en Windows
+PyMySQL==1.1.0  # Alternativa pura Python para Windows
+
+# Django REST Framework
+djangorestframework==3.14.0
+django-filter==23.5
+
+# JWT Authentication
+djangorestframework-simplejwt==5.3.1
+
+# CORS
+django-cors-headers==4.3.1
+
+# Documentation
+drf-spectacular==0.27.0
+
+# Security
+django-ratelimit==4.1.0
+
+# Testing
+pytest==7.4.3
+pytest-django==4.7.0
+pytest-cov==4.1.0
+factory-boy==3.3.0
+
+# Code Quality
+flake8==7.0.0
+black==23.12.1
+isort==5.13.2
+pylint==3.0.3
+
+# Development
+ipython==8.19.0
+django-debug-toolbar==4.2.0
+django-extensions==3.2.3

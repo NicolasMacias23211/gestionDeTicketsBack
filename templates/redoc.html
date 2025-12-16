@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sistema de Gestión de Tickets E-SEUS API</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
+    <link rel="shortcut icon" href="/static/Emtelco.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <redoc 
+        spec-url="{{ schema_url }}"
+        lazy-rendering="true"
+        native-scrollbars
+        path-in-middle-panel
+        required-props-first
+        sort-props-alphabetically
+        expand-responses="200,201"
+    >
+        <script>
+            window.Redoc = {
+                theme: {
+                    colors: {
+                        primary: {
+                            main: '#021C7D'
+                        },
+                        success: {
+                            main: '#10b981'
+                        },
+                        warning: {
+                            main: '#f59e0b'
+                        },
+                        error: {
+                            main: '#ef4444'
+                        },
+                        text: {
+                            primary: '#1e293b',
+                            secondary: '#64748b'
+                        },
+                        http: {
+                            get: '#10b981',
+                            post: '#50bdeb',
+                            put: '#f59e0b',
+                            patch: '#8b5cf6',
+                            delete: '#ef4444',
+                            basic: '#999',
+                            link: '#021C7D',
+                            head: '#9012fe'
+                        },
+                        border: {
+                            dark: '#e2e8f0',
+                            light: '#f1f5f9'
+                        },
+                        responses: {
+                            success: {
+                                color: '#10b981',
+                                backgroundColor: '#ecfdf5',
+                                tabTextColor: '#047857'
+                            },
+                            error: {
+                                color: '#ef4444',
+                                backgroundColor: '#fef2f2',
+                                tabTextColor: '#dc2626'
+                            },
+                            redirect: {
+                                color: '#f59e0b',
+                                backgroundColor: '#fffbeb',
+                                tabTextColor: '#d97706'
+                            },
+                            info: {
+                                color: '#50bdeb',
+                                backgroundColor: '#eff6ff',
+                                tabTextColor: '#2563eb'
+                            }
+                        }
+                    },
+                    typography: {
+                        fontSize: '15px',
+                        lineHeight: '1.6',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                        fontWeightRegular: '400',
+                        fontWeightBold: '600',
+                        fontWeightLight: '300',
+                        smoothing: 'antialiased',
+                        optimizeSpeed: true,
+                        headings: {
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                            fontWeight: '700',
+                            lineHeight: '1.3'
+                        },
+                        code: {
+                            fontSize: '14px',
+                            fontFamily: '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',
+                            fontWeight: '400',
+                            color: '#021C7D',
+                            backgroundColor: '#f8fafc',
+                            wrap: false
+                        },
+                        links: {
+                            color: '#021C7D',
+                            visited: '#50bdeb',
+                            hover: '#50bdeb'
+                        }
+                    },
+                    sidebar: {
+                        backgroundColor: '#ffffff',
+                        textColor: '#334155',
+                        activeTextColor: '#021C7D',
+                        groupItems: {
+                            textTransform: 'uppercase',
+                            fontWeight: '700'
+                        },
+                        level1Items: {
+                            textTransform: 'none',
+                            fontWeight: '600'
+                        },
+                        arrow: {
+                            size: '1.2em',
+                            color: '#64748b'
+                        },
+                        width: '280px'
+                    },
+                    logo: {
+                        maxHeight: '50px',
+                        maxWidth: '200px',
+                        gutter: '20px'
+                    },
+                    rightPanel: {
+                        backgroundColor: '#1e293b',
+                        width: '45%',
+                        textColor: '#e2e8f0'
+                    },
+                    codeSample: {
+                        backgroundColor: '#0f172a'
+                    },
+                    fab: {
+                        backgroundColor: '#021C7D',
+                        color: '#ffffff'
+                    },
+                    spacing: {
+                        unit: 5,
+                        sectionHorizontal: 40,
+                        sectionVertical: 40
+                    },
+                    breakpoints: {
+                        small: '50rem',
+                        medium: '75rem',
+                        large: '105rem'
+                    },
+                    schema: {
+                        nestedBackground: '#f8fafc',
+                        linesColor: '#e2e8f0',
+                        defaultDetailsWidth: '75%',
+                        typeNameColor: '#50bdeb',
+                        typeTitleColor: '#334155',
+                        requireLabelColor: '#ef4444',
+                        labelsTextSize: '0.9em',
+                        nestingSpacing: '1em',
+                        arrow: {
+                            size: '1.1em',
+                            color: '#64748b'
+                        }
+                    },
+                    codeBlock: {
+                        backgroundColor: '#0f172a',
+                        tokens: {}
+                    }
+                },
+                scrollYOffset: 0,
+                hideDownloadButton: false,
+                disableSearch: false,
+                expandDefaultServerVariables: true,
+                expandResponses: '200,201',
+                expandSingleSchemaField: true,
+                jsonSampleExpandLevel: 3,
+                hideSingleRequestSampleTab: true,
+                menuToggle: true,
+                nativeScrollbars: true,
+                noAutoAuth: false,
+                onlyRequiredInSamples: false,
+                pathInMiddlePanel: true,
+                requiredPropsFirst: true,
+                showExtensions: false,
+                sortPropsAlphabetically: true,
+                payloadSampleIdx: 0,
+                unstable_ignoreMimeParameters: false
+            };
+        </script>
+    </redoc>
+    
+    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+    
+    <script>
+        // Agregar estilos CSS personalizados después de que ReDoc cargue
+        window.addEventListener('load', function() {
+            const style = document.createElement('style');
+            style.textContent = `
+                /* Header personalizado con gradiente corporativo */
+                .menu-content {
+                    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+                    border-right: 1px solid #e2e8f0 !important;
+                }
+                
+                /* Logo/Header de la API */
+                .api-info {
+                    background: linear-gradient(135deg, #021C7D 0%, #50bdeb 100%) !important;
+                    padding: 2rem 1.5rem !important;
+                    border-radius: 0 !important;
+                    margin: 0 !important;
+                }
+                
+                .api-info h1 {
+                    color: #ffffff !important;
+                    font-size: 1.75rem !important;
+                    font-weight: 700 !important;
+                    margin-bottom: 0.5rem !important;
+                }
+                
+                .api-info p {
+                    color: rgba(255, 255, 255, 0.95) !important;
+                    font-size: 0.95rem !important;
+                    line-height: 1.6 !important;
+                }
+                
+                .api-info > div:first-child {
+                    border: none !important;
+                }
+                
+                /* Versión badge */
+                .api-info .sc-AxheI {
+                    background: rgba(255, 255, 255, 0.25) !important;
+                    color: #ffffff !important;
+                    padding: 0.4rem 0.8rem !important;
+                    border-radius: 20px !important;
+                    font-weight: 600 !important;
+                    backdrop-filter: blur(10px) !important;
+                }
+                
+                /* Enlaces en la info */
+                .api-info a {
+                    color: rgba(255, 255, 255, 0.95) !important;
+                    text-decoration: underline !important;
+                }
+                
+                .api-info a:hover {
+                    color: #ffffff !important;
+                }
+                
+                /* Items del menú lateral */
+                .menu-content li > label {
+                    color: #334155 !important;
+                    font-weight: 600 !important;
+                    font-size: 0.85rem !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.5px !important;
+                    padding: 0.75rem 1.5rem !important;
+                }
+                
+                .menu-content li > label:hover {
+                    background: #f1f5f9 !important;
+                    color: #021C7D !important;
+                }
+                
+                /* Items activos del menú */
+                .menu-content li.active > label {
+                    background: linear-gradient(90deg, rgba(2, 28, 125, 0.08) 0%, rgba(80, 189, 235, 0.08) 100%) !important;
+                    color: #021C7D !important;
+                    border-left: 4px solid #021C7D !important;
+                    font-weight: 700 !important;
+                }
+                
+                /* Sub-items del menú */
+                .menu-content ul ul li > label {
+                    text-transform: none !important;
+                    font-size: 0.9rem !important;
+                    font-weight: 500 !important;
+                    padding-left: 2.5rem !important;
+                }
+                
+                /* Métodos HTTP */
+                .http-verb {
+                    font-weight: 700 !important;
+                    border-radius: 6px !important;
+                    padding: 0.25rem 0.6rem !important;
+                }
+                
+                /* Botones */
+                button {
+                    border-radius: 8px !important;
+                    font-weight: 600 !important;
+                    transition: all 0.2s ease !important;
+                }
+                
+                button:hover {
+                    transform: translateY(-1px) !important;
+                    box-shadow: 0 4px 12px rgba(2, 28, 125, 0.15) !important;
+                }
+                
+                /* Badges y tags */
+                .sc-AxheI, span[type="success"], span[type="warning"] {
+                    border-radius: 6px !important;
+                    font-weight: 600 !important;
+                }
+                
+                /* Tabs de respuestas */
+                .react-tabs__tab {
+                    border-radius: 8px 8px 0 0 !important;
+                    font-weight: 600 !important;
+                }
+                
+                .react-tabs__tab--selected {
+                    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%) !important;
+                }
+                
+                /* Scrollbar personalizado */
+                ::-webkit-scrollbar {
+                    width: 10px;
+                    height: 10px;
+                }
+                
+                ::-webkit-scrollbar-track {
+                    background: #f1f5f9;
+                    border-radius: 10px;
+                }
+                
+                ::-webkit-scrollbar-thumb {
+                    background: linear-gradient(180deg, #021C7D 0%, #50bdeb 100%);
+                    border-radius: 10px;
+                }
+                
+                ::-webkit-scrollbar-thumb:hover {
+                    background: linear-gradient(180deg, #50bdeb 0%, #021C7D 100%);
+                }
+                
+                /* Panel derecho de ejemplos */
+                .sc-AxhCb {
+                    background: #1e293b !important;
+                }
+                
+                /* Headings */
+                h1, h2, h3, h4, h5 {
+                    color: #021C7D !important;
+                }
+                
+                h2 {
+                    border-bottom: 2px solid #e2e8f0 !important;
+                    padding-bottom: 0.5rem !important;
+                }
+                
+                /* Footer corporativo */
+                body::after {
+                    content: "© ${new Date().getFullYear()} Emtelco S.A.S - Sistema de Gestión de Tickets E-SEUS";
+                    display: block;
+                    text-align: center;
+                    padding: 1.5rem;
+                    background: linear-gradient(90deg, #021C7D 0%, #50bdeb 100%);
+                    color: rgba(255, 255, 255, 0.9);
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
