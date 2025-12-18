@@ -6,6 +6,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
 from django.utils import timezone
 
+from core.base.mixins import CustomDeleteMixin
+
 from .models import (
     Client, Service, Role, EUser, TicketPriority, Program, SubProgram,
     ClosingCode, ANS, User, Status, Ticket, ReportedTime, Note
@@ -23,7 +25,7 @@ from .filters import TicketFilter
 from .permissions import IsTicketOwnerOrAssigned, IsAdminOrReadOnly
 
 
-class ClientViewSet(viewsets.ModelViewSet):
+class ClientViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar clientes
     """
@@ -35,7 +37,7 @@ class ClientViewSet(viewsets.ModelViewSet):
     ordering_fields = ['client_name']
 
 
-class ServiceViewSet(viewsets.ModelViewSet):
+class ServiceViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar servicios
     """
@@ -47,7 +49,7 @@ class ServiceViewSet(viewsets.ModelViewSet):
     ordering_fields = ['id_services', 'service_name']
 
 
-class RoleViewSet(viewsets.ModelViewSet):
+class RoleViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar roles
     """
@@ -58,7 +60,7 @@ class RoleViewSet(viewsets.ModelViewSet):
     search_fields = ['rol_name', 'description']
 
 
-class EUserViewSet(viewsets.ModelViewSet):
+class EUserViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar usuarios empresariales
     """
@@ -77,7 +79,7 @@ class EUserViewSet(viewsets.ModelViewSet):
         return EUserSerializer
 
 
-class TicketPriorityViewSet(viewsets.ModelViewSet):
+class TicketPriorityViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar prioridades de tickets
     """
@@ -86,7 +88,7 @@ class TicketPriorityViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
 
 
-class ProgramViewSet(viewsets.ModelViewSet):
+class ProgramViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar programas
     """
@@ -98,7 +100,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
     search_fields = ['program_name']
 
 
-class SubProgramViewSet(viewsets.ModelViewSet):
+class SubProgramViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar sub-programas
     """
@@ -110,18 +112,18 @@ class SubProgramViewSet(viewsets.ModelViewSet):
     search_fields = ['sub_program_name']
 
 
-class ClosingCodeViewSet(viewsets.ModelViewSet):
+class ClosingCodeViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar códigos de cierre
     """
     queryset = ClosingCode.objects.all()
     serializer_class = ClosingCodeSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['closing_code_name', 'closing_code_description']
 
 
-class ANSViewSet(viewsets.ModelViewSet):
+class ANSViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar ANS
     """
@@ -132,7 +134,7 @@ class ANSViewSet(viewsets.ModelViewSet):
     search_fields = ['ans_name', 'ans_description']
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar usuarios
     """
@@ -143,7 +145,7 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ['network_user', 'mail']
 
 
-class StatusViewSet(viewsets.ModelViewSet):
+class StatusViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar estados
     """
@@ -152,7 +154,7 @@ class StatusViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
 
 
-class TicketViewSet(viewsets.ModelViewSet):
+class TicketViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar tickets
     """
@@ -345,7 +347,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class ReportedTimeViewSet(viewsets.ModelViewSet):
+class ReportedTimeViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar tiempos reportados
     """
@@ -362,7 +364,7 @@ class ReportedTimeViewSet(viewsets.ModelViewSet):
         return ReportedTimeSerializer
 
 
-class NoteViewSet(viewsets.ModelViewSet):
+class NoteViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar notas de tickets
     """
