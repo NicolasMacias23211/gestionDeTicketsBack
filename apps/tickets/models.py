@@ -78,6 +78,12 @@ class Role(models.Model):
         blank=True,
         verbose_name='Descripción'
     )
+    icon = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name='Icono'
+    )
 
     class Meta:
         db_table = 'roles'
