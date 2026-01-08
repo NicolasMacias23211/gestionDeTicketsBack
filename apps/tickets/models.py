@@ -137,13 +137,17 @@ class EUser(models.Model):
         Client,
         on_delete=models.PROTECT,
         db_column='user-client-name',
-        verbose_name='Cliente'
+        verbose_name='Cliente',
+        null=True,
+        blank=True
     )
     id_services = models.ForeignKey(
         Service,
         on_delete=models.PROTECT,
         db_column='id-services',
-        verbose_name='Servicio'
+        verbose_name='Servicio',
+        null=True,
+        blank=True
     )
     rol_name = models.ForeignKey(
         Role,
@@ -269,6 +273,7 @@ class ClosingCode(models.Model):
         db_table = 'closing-codes'
         verbose_name = 'Código de Cierre'
         verbose_name_plural = 'Códigos de Cierre'
+        ordering = ['id_closing_code']
 
     def __str__(self):
         return self.closing_code_name or f'Código {self.id_closing_code}'
@@ -300,6 +305,7 @@ class ANS(models.Model):
         db_table = 'ans'
         verbose_name = 'ANS'
         verbose_name_plural = 'ANS'
+        ordering = ['id_ans']
 
     def __str__(self):
         return self.ans_name
@@ -315,6 +321,15 @@ class User(models.Model):
         db_column='network-user',
         verbose_name='Usuario de Red'
     )
+
+    full_name = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        db_column='full-name',
+        verbose_name='Nombre Completo'
+    )
+
     mail = models.CharField(
         max_length=50,
         null=True,

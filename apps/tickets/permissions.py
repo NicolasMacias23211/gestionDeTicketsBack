@@ -1,18 +1,32 @@
 from rest_framework import permissions
+from .models import EUser
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     """
     Permiso personalizado que permite lectura a todos los usuarios autenticados
     pero solo escritura a los administradores
+    Verifica tanto is_staff de Django como el rol 'administrador' en EUser.
     """
     def has_permission(self, request, view):
         # Los métodos seguros (GET, HEAD, OPTIONS) están permitidos para todos
         if request.method in permissions.SAFE_METHODS:
             return True
         
-        # Los métodos de escritura solo para administradores
-        return request.user and request.user.is_staff
+        # Para métodos de escritura, verificar si es staff o tiene rol administrador
+        if not request.user or not request.user.is_authenticated:
+            return False
+            
+        # Si es staff en Django, permitir
+        if request.user.is_staff:
+            return True
+        
+        # Verificar si tiene rol "administrador" en EUser
+        try:
+            euser = EUser.objects.get(network_user=request.user.username)
+            return euser.rol_name and euser.rol_name.rol_name.strip().lower() == 'administrador'
+        except EUser.DoesNotExist:
+            return False
 
 
 class IsTicketOwnerOrAssigned(permissions.BasePermission):

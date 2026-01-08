@@ -11,6 +11,7 @@ from .serializers import (
     UserSerializer,
     LogoutSerializer
 )
+from apps.tickets.models import EUser
 
 
 class LDAPAuthView(APIView):
@@ -45,6 +46,7 @@ class LDAPAuthView(APIView):
                             'email': {'type': 'string'},
                             'position': {'type': 'string'},
                             'document': {'type': 'string'},
+                            'role': {'type': 'string', 'nullable': True},
                         }
                     },
                     'tokens': {
@@ -63,7 +65,7 @@ class LDAPAuthView(APIView):
                 }
             }
         },
-        description="Autenticación mediante datos de LDAP. Recibe la respuesta de la API externa de LDAP y genera tokens JWT."
+        description="Autenticación mediante datos de LDAP. Recibe la respuesta de la API externa de LDAP y genera tokens JWT. Incluye el rol del usuario si existe en la base de datos."
     )
     def post(self, request):
         # Verificar si viene el error de credenciales incorrectas
@@ -90,6 +92,15 @@ class LDAPAuthView(APIView):
             # Generar tokens JWT
             tokens = serializer.generate_tokens(user, ldap_data)
             
+            # Buscar información del EUser para obtener el rol
+            euser_role = None
+            try:
+                euser = EUser.objects.get(network_user=ldap_data['user'])
+                # Limpiar espacios en blanco del rol
+                euser_role = euser.rol_name.rol_name.strip() if euser.rol_name else None
+            except EUser.DoesNotExist:
+                pass
+            
             return Response({
                 'success': True,
                 'message': 'Autenticación exitosa',
@@ -99,6 +110,7 @@ class LDAPAuthView(APIView):
                     'email': ldap_data['mail'],
                     'position': ldap_data['position'],
                     'document': ldap_data['document'],
+                    'role': euser_role,
                 },
                 'tokens': tokens
             }, status=status.HTTP_200_OK)

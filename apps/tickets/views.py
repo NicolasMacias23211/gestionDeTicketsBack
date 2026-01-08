@@ -43,7 +43,7 @@ class ServiceViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['service_name', 'service_description']
     ordering_fields = ['id_services', 'service_name']
@@ -142,7 +142,8 @@ class UserViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     serializer_class = TicketUserSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['network_user', 'mail']
+    search_fields = ['network_user', 'mail', 'full_name']
+    lookup_field = 'network_user'
 
 
 class StatusViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
