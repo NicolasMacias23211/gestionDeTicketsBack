@@ -21,7 +21,7 @@ from .serializers import (
     ReportedTimeSerializer, ReportedTimeCreateSerializer, NoteSerializer,
     NoteCreateSerializer, TicketAssignSerializer, TicketStatsSerializer
 )
-from .filters import TicketFilter
+from .filters import TicketFilter, ReportedTimeFilter
 from .permissions import IsTicketOwnerOrAssigned, IsAdminOrReadOnly
 
 
@@ -55,7 +55,7 @@ class RoleViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['rol_name', 'description']
 
@@ -351,10 +351,10 @@ class ReportedTimeViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar tiempos reportados
     """
-    queryset = ReportedTime.objects.select_related('id_ticket').all()
+    queryset = ReportedTime.objects.select_related('id_ticket', 'network_user').all()
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['id_ticket']
+    filterset_class = ReportedTimeFilter
     ordering_fields = ['date_reported', 'create_at']
     ordering = ['-date_reported']
 
