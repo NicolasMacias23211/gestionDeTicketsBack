@@ -1,6 +1,6 @@
 import django_filters
 from django.db.models import Q
-from .models import Ticket
+from .models import Ticket, ReportedTime
 
 
 class TicketFilter(django_filters.FilterSet):
@@ -111,3 +111,50 @@ class TicketFilter(django_filters.FilterSet):
             Q(estimated_closing_date__gte=timezone.now()) |
             Q(closing_date__isnull=False)
         )
+
+
+class ReportedTimeFilter(django_filters.FilterSet):
+    """
+    Filtros personalizados para tiempos reportados
+    """
+    # Filtro de usuario
+    network_user = django_filters.CharFilter(
+        field_name='network_user__network_user',
+        lookup_expr='exact',
+        label='Usuario de Red'
+    )
+    
+    # Filtros de rango de fechas
+    date_reported_after = django_filters.DateTimeFilter(
+        field_name='date_reported',
+        lookup_expr='gte',
+        label='Fecha reportada después de'
+    )
+    date_reported_before = django_filters.DateTimeFilter(
+        field_name='date_reported',
+        lookup_expr='lte',
+        label='Fecha reportada antes de'
+    )
+    
+    # Filtro combinado de usuario y rango de fechas
+    user_date_range = django_filters.CharFilter(
+        method='filter_user_date_range',
+        label='Filtrar por usuario y rango de fechas'
+    )
+    
+    class Meta:
+        model = ReportedTime
+        fields = {
+            'id_reported_times': ['exact'],
+            'id_ticket': ['exact'],
+            'network_user': ['exact'],
+        }
+    
+    def filter_user_date_range(self, queryset, name, value):
+        """
+        Método personalizado para aplicar filtros combinados
+        Este método puede usarse desde código si necesitas un filtrado programático
+        """
+        # Este es un método de ejemplo, normalmente usarás los filtros individuales
+        # pero se puede extender si necesitas lógica más compleja
+        return queryset

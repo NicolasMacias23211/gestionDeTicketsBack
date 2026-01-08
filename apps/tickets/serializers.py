@@ -140,7 +140,7 @@ class NoteCreateSerializer(serializers.ModelSerializer):
     """Serializer para crear notas"""
     class Meta:
         model = Note
-        fields = ('note', 'visible_to_client', 'id_ticket')
+        fields = ('note', 'visible_to_client', 'id_ticket', 'network_user')
 
 
 class ReportedTimeSerializer(serializers.ModelSerializer):
@@ -159,7 +159,7 @@ class ReportedTimeCreateSerializer(serializers.ModelSerializer):
     """Serializer para crear tiempos reportados"""
     class Meta:
         model = ReportedTime
-        fields = ('date_reported', 'reported_time', 'id_ticket')
+        fields = ('date_reported', 'reported_time', 'id_ticket', 'network_user')
 
 
 class TicketListSerializer(serializers.ModelSerializer):

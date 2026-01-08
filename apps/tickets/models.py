@@ -78,6 +78,12 @@ class Role(models.Model):
         blank=True,
         verbose_name='Descripción'
     )
+    icon = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name='Icono'
+    )
 
     class Meta:
         db_table = 'roles'
@@ -515,6 +521,15 @@ class ReportedTime(models.Model):
         db_column='id-ticket',
         verbose_name='Ticket'
     )
+    network_user = models.ForeignKey(
+        EUser,
+        on_delete=models.PROTECT,
+        db_column='network-user',
+        verbose_name='Usuario de Red',
+        help_text='Usuario que reporta el tiempo',
+        null=True,
+        blank=True
+    )
     create_at = models.DateTimeField(
         default=timezone.now,
         db_column='create-at',
@@ -551,6 +566,15 @@ class Note(models.Model):
         default=False,
         db_column='visible-to-client',
         verbose_name='Visible para el Cliente'
+    )
+    network_user = models.ForeignKey(
+        EUser,
+        on_delete=models.PROTECT,
+        db_column='network-user',
+        verbose_name='Usuario',
+        help_text='Usuario que escribe la nota',
+        null=True,
+        blank=True
     )
     create_at = models.DateTimeField(
         default=timezone.now,
