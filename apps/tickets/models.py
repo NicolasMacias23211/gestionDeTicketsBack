@@ -364,6 +364,11 @@ class Status(models.Model):
         db_column='status-description',
         verbose_name='Descripción del Estado'
     )
+    is_backlog = models.BooleanField(
+        default=False,
+        db_column='is-backlog',
+        verbose_name='Es Backlog'
+    )
 
     class Meta:
         db_table = 'status'
