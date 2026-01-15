@@ -7,6 +7,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 
 from core.base.mixins import CustomDeleteMixin
+from core.pagination import StandardResultsSetPagination
 
 from .models import (
     Client, Service, Role, EUser, TicketPriority, Program, SubProgram,
@@ -132,6 +133,7 @@ class ANSViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['ans_name', 'ans_description']
+    pagination_class = StandardResultsSetPagination
 
 
 class UserViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
