@@ -346,6 +346,49 @@ class TicketViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
         serializer = TicketStatsSerializer(data)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'])
+    def backlog(self, request):
+        """
+        Obtener tickets con estado de backlog (is_backlog=True)
+        Filtros opcionales:
+        - assigned_to: network_user del usuario asignado
+        - search: búsqueda por título y/o descripción (LIKE)
+        - ticket_id: búsqueda por ID del ticket (LIKE)
+        """
+        # Filtrar tickets donde el estado tiene is_backlog=True
+        queryset = self.get_queryset().filter(status_id__is_backlog=True)
+        
+        # Aplicar filtro opcional por usuario asignado
+        assigned_to = request.query_params.get('assigned_to', None)
+        if assigned_to:
+            queryset = queryset.filter(assigned_to=assigned_to)
+        
+        # Aplicar filtro de búsqueda por título y/o descripción
+        search = request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                Q(ticket_title__icontains=search) | 
+                Q(ticket_description__icontains=search)
+            )
+        
+        # Aplicar filtro por ID del ticket
+        ticket_id = request.query_params.get('ticket_id', None)
+        if ticket_id:
+            queryset = queryset.filter(id_ticket__icontains=ticket_id)
+        
+        # Ordenar por fecha de creación (más recientes primero)
+        queryset = queryset.order_by('-create_at')
+        
+        # Paginar los resultados
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = TicketDetailSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        # Si no hay paginación configurada, devolver todos los resultados
+        serializer = TicketDetailSerializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class ReportedTimeViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
