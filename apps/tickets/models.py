@@ -321,6 +321,13 @@ class User(models.Model):
         db_column='network-user',
         verbose_name='Usuario de Red'
     )
+    full_name = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True,
+        db_column='full-name',
+        verbose_name='Nombre Completo'
+    )
     mail = models.CharField(
         max_length=50,
         null=True,

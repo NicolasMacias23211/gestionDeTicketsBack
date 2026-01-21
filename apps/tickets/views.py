@@ -72,6 +72,7 @@ class EUserViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     search_fields = ['network_user', 'name', 'last_name', 'email']
     filterset_fields = ['user_client_name', 'rol_name', 'id_services']
     ordering_fields = ['network_user', 'name', 'last_name']
+    lookup_field = 'network_user'
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -143,6 +144,7 @@ class UserViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['network_user', 'mail']
+    lookup_field = 'network_user'
 
 
 class StatusViewSet(CustomDeleteMixin, viewsets.ModelViewSet):

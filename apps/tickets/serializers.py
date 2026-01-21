@@ -208,10 +208,11 @@ class TicketCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = [
-            'ticket_title', 'ticket_description', 'ticket_attachments',
+            'id_ticket', 'ticket_title', 'ticket_description', 'ticket_attachments',
             'ticket_service', 'ticket_priority', 'ticket_ans',
             'reporter_user', 'sub_program_name', 'status_id'
         ]
+        read_only_fields = ['id_ticket']
 
     def create(self, validated_data):
         """Crear ticket con valores iniciales"""
