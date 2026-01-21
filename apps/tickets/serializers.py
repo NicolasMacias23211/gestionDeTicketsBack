@@ -180,9 +180,10 @@ class TicketListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = [
-            'id_ticket', 'ticket_title', 'service_name', 'priority_name',
-            'status_name', 'reporter_user_name', 'assigned_to', 'create_at',
-            'estimated_closing_date'
+            'id_ticket', 'ticket_title', 'ticket_service', 'ticket_priority',
+            'status_id', 'service_name', 'priority_name', 'status_name',
+            'reporter_user_name', 'assigned_to', 'create_at',
+            'estimated_closing_date', 'ticket_description'
         ]
 
 
