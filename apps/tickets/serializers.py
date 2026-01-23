@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.utils import timezone
 from .models import (
     Client, Service, Role, EUser, TicketPriority, Program, SubProgram,
-    ClosingCode, ANS, User, Status, Ticket, ReportedTime, Note
+    ClosingCode, ANS, User, Status, Ticket, ReportedTime, Note, WorkingHours
 )
 
 
@@ -259,3 +259,10 @@ class TicketStatsSerializer(serializers.Serializer):
     by_priority = serializers.DictField()
     by_service = serializers.DictField()
     by_status = serializers.DictField()
+
+class WorkingHoursSerializer(serializers.Serializer):
+    """Serializer para horas trabajadas en tickets"""
+    class Meta:
+        model = WorkingHours
+        fields = '__all__'
+        read_only_fields = ['id_working_hours']

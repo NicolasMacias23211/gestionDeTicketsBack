@@ -10,7 +10,7 @@ from core.base.mixins import CustomDeleteMixin
 
 from .models import (
     Client, Service, Role, EUser, TicketPriority, Program, SubProgram,
-    ClosingCode, ANS, User, Status, Ticket, ReportedTime, Note
+    ClosingCode, ANS, User, Status, Ticket, ReportedTime, Note, WorkingHours
 )
 from .serializers import (
     ClientSerializer, ServiceSerializer, RoleSerializer, EUserSerializer,
@@ -19,7 +19,8 @@ from .serializers import (
     TicketUserSerializer, StatusSerializer, TicketListSerializer,
     TicketDetailSerializer, TicketCreateSerializer, TicketUpdateSerializer,
     ReportedTimeSerializer, ReportedTimeCreateSerializer, NoteSerializer,
-    NoteCreateSerializer, TicketAssignSerializer, TicketStatsSerializer
+    NoteCreateSerializer, TicketAssignSerializer, TicketStatsSerializer, 
+    WorkingHoursSerializer
 )
 from .filters import TicketFilter, ReportedTimeFilter
 from .permissions import IsTicketOwnerOrAssigned, IsAdminOrReadOnly
@@ -435,3 +436,15 @@ class NoteViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
             queryset = queryset.filter(visible_to_client=True)
         
         return queryset
+
+class WorkingHoursViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
+    """
+    ViewSet para gestionar horas trabajadas en tickets
+    """
+    queryset = WorkingHours.objects.all()
+    serializer_class = WorkingHoursSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    
+    @action(detail=False, methods=['get'])
+    def backlog(self, request):
+        pass
