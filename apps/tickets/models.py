@@ -454,12 +454,14 @@ class Ticket(models.Model):
         db_column='update-at',
         verbose_name='Fecha de Actualización'
     )
-    assigned_to = models.CharField(
-        max_length=45,
+    assigned_to = models.ForeignKey(
+        EUser,
+        on_delete=models.PROTECT,
         null=True,
         blank=True,
         db_column='assigned-to',
-        verbose_name='Asignado a'
+        verbose_name='Asignado a',
+        related_name='assigned_tickets'
     )
     closing_date = models.DateTimeField(
         null=True,

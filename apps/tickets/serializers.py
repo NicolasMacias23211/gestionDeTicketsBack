@@ -211,7 +211,7 @@ class TicketCreateSerializer(serializers.ModelSerializer):
         fields = [
             'id_ticket', 'ticket_title', 'ticket_description', 'ticket_attachments',
             'ticket_service', 'ticket_priority', 'ticket_ans',
-            'reporter_user', 'sub_program_name', 'status_id'
+            'reporter_user', 'sub_program_name', 'status_id', 'assigned_to'
         ]
         read_only_fields = ['id_ticket']
 
