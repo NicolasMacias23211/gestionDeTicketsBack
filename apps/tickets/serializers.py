@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.utils import timezone
 from .models import (
     Client, Service, Role, EUser, TicketPriority, Program, SubProgram,
-    ClosingCode, ANS, User, Status, Ticket, ReportedTime, Note
+    ClosingCode, ANS, User, Status, Ticket, ReportedTime, Note, WorkingHours
 )
 
 
@@ -180,9 +180,10 @@ class TicketListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = [
-            'id_ticket', 'ticket_title', 'service_name', 'priority_name',
-            'status_name', 'reporter_user_name', 'assigned_to', 'create_at',
-            'estimated_closing_date'
+            'id_ticket', 'ticket_title', 'ticket_service', 'ticket_priority',
+            'status_id', 'service_name', 'priority_name', 'status_name',
+            'reporter_user_name', 'assigned_to', 'create_at',
+            'estimated_closing_date', 'ticket_description'
         ]
 
 
@@ -208,10 +209,11 @@ class TicketCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = [
-            'ticket_title', 'ticket_description', 'ticket_attachments',
+            'id_ticket', 'ticket_title', 'ticket_description', 'ticket_attachments',
             'ticket_service', 'ticket_priority', 'ticket_ans',
-            'reporter_user', 'sub_program_name', 'status_id'
+            'reporter_user', 'sub_program_name', 'status_id', 'assigned_to'
         ]
+        read_only_fields = ['id_ticket']
 
     def create(self, validated_data):
         """Crear ticket con valores iniciales"""
@@ -259,3 +261,10 @@ class TicketStatsSerializer(serializers.Serializer):
     by_priority = serializers.DictField()
     by_service = serializers.DictField()
     by_status = serializers.DictField()
+
+class WorkingHoursSerializer(serializers.Serializer):
+    """Serializer para horas trabajadas en tickets"""
+    class Meta:
+        model = WorkingHours
+        fields = '__all__'
+        read_only_fields = ['id_working_hours']

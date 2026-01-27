@@ -10,7 +10,7 @@ from core.base.mixins import CustomDeleteMixin
 
 from .models import (
     Client, Service, Role, EUser, TicketPriority, Program, SubProgram,
-    ClosingCode, ANS, User, Status, Ticket, ReportedTime, Note
+    ClosingCode, ANS, User, Status, Ticket, ReportedTime, Note, WorkingHours
 )
 from .serializers import (
     ClientSerializer, ServiceSerializer, RoleSerializer, EUserSerializer,
@@ -19,7 +19,8 @@ from .serializers import (
     TicketUserSerializer, StatusSerializer, TicketListSerializer,
     TicketDetailSerializer, TicketCreateSerializer, TicketUpdateSerializer,
     ReportedTimeSerializer, ReportedTimeCreateSerializer, NoteSerializer,
-    NoteCreateSerializer, TicketAssignSerializer, TicketStatsSerializer
+    NoteCreateSerializer, TicketAssignSerializer, TicketStatsSerializer, 
+    WorkingHoursSerializer
 )
 from .filters import TicketFilter, ReportedTimeFilter
 from .permissions import IsTicketOwnerOrAssigned, IsAdminOrReadOnly
@@ -72,6 +73,7 @@ class EUserViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     search_fields = ['network_user', 'name', 'last_name', 'email']
     filterset_fields = ['user_client_name', 'rol_name', 'id_services']
     ordering_fields = ['network_user', 'name', 'last_name']
+    lookup_field = 'network_user'
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -143,6 +145,7 @@ class UserViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['network_user', 'mail']
+    lookup_field = 'network_user'
 
 
 class StatusViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
@@ -435,3 +438,15 @@ class NoteViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
             queryset = queryset.filter(visible_to_client=True)
         
         return queryset
+
+class WorkingHoursViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
+    """
+    ViewSet para gestionar horas trabajadas en tickets
+    """
+    queryset = WorkingHours.objects.all()
+    serializer_class = WorkingHoursSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    
+    @action(detail=False, methods=['get'])
+    def backlog(self, request):
+        pass
