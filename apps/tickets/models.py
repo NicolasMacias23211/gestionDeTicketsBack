@@ -599,3 +599,31 @@ class Note(models.Model):
 
     def __str__(self):
         return f'Nota #{self.id_note} - Ticket {self.id_ticket.id_ticket}'
+
+class WorkingHours(models.Model):
+    id_working_hours = models.AutoField(
+        primary_key=True,
+        db_column='id-working-hours',
+        verbose_name='ID de Horas Laborales'
+    )
+    week_day = models.CharField(
+        max_length=15,
+        db_column='week-day',
+        verbose_name='Día de la Semana'
+    )
+    start_time = models.TimeField(
+        db_column='start-time',
+        verbose_name='Hora de Inicio'
+    )
+    end_time = models.TimeField(
+        db_column='end-time',
+        verbose_name='Hora de Fin'
+    )
+    
+    class Meta:
+        db_table = 'working-hours'
+        verbose_name = 'Horas Laborales'
+        verbose_name_plural = 'Horas Laborales'
+
+    def __str__(self):
+        return f'Horas Laborales #{self.id_working_hours} - {self.week_day}'
