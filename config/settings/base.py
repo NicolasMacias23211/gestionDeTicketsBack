@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     # Local Apps
     'apps.authentication',
     'apps.tickets',
+    'apps.files',
 ]
 
 MIDDLEWARE = [
@@ -110,6 +111,9 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Upload files
+UPLOAD_ROOT = BASE_DIR / 'uploads'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
