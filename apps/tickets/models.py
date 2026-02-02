@@ -376,6 +376,10 @@ class Status(models.Model):
         db_column='is-backlog',
         verbose_name='Es Backlog'
     )
+    ordering = models.IntegerField(
+        verbose_name='Orden de los estados',
+        db_column='ordering'
+    )
 
     class Meta:
         db_table = 'status'

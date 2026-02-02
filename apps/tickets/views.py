@@ -153,6 +153,7 @@ class StatusViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     ViewSet para gestionar estados
     """
     queryset = Status.objects.all()
+    search_fields = ['is-backlog']
     serializer_class = StatusSerializer
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
 
