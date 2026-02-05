@@ -4,7 +4,8 @@ from .views import (
     ClientViewSet, ServiceViewSet, RoleViewSet, EUserViewSet,
     TicketPriorityViewSet, ProgramViewSet, SubProgramViewSet,
     ClosingCodeViewSet, ANSViewSet, UserViewSet, StatusViewSet,
-    TicketViewSet, ReportedTimeViewSet, NoteViewSet, WorkingHoursViewSet
+    TicketViewSet, ReportedTimeViewSet, NoteViewSet, WorkingHoursViewSet,
+    ProjectDateViewSet
 )
 
 app_name = 'tickets'
@@ -26,6 +27,7 @@ router.register(r'tickets', TicketViewSet, basename='ticket')
 router.register(r'reported-times', ReportedTimeViewSet, basename='reported-time')
 router.register(r'notes', NoteViewSet, basename='note')
 router.register(r'working-hours', WorkingHoursViewSet, basename='working-hours')
+router.register(r'project-date', ProjectDateViewSet, basename='project-date')
 
 urlpatterns = [
     path('', include(router.urls)),
