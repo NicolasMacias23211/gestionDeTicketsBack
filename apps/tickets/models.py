@@ -613,7 +613,8 @@ class WorkingHours(models.Model):
     week_day = models.CharField(
         max_length=15,
         db_column='week-day',
-        verbose_name='Día de la Semana'
+        verbose_name='Día de la Semana',
+        unique=True
     )
     start_time = models.TimeField(
         db_column='start-time',

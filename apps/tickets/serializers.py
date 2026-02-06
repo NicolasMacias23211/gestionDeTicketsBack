@@ -262,9 +262,18 @@ class TicketStatsSerializer(serializers.Serializer):
     by_service = serializers.DictField()
     by_status = serializers.DictField()
 
-class WorkingHoursSerializer(serializers.Serializer):
+
+class WorkingHoursSerializer(serializers.ModelSerializer):
     """Serializer para horas trabajadas en tickets"""
     class Meta:
         model = WorkingHours
         fields = '__all__'
         read_only_fields = ['id_working_hours']
+        
+
+class ProjectDateSerializer(serializers.Serializer):
+    ans = serializers.IntegerField()
+    date_creation = serializers.CharField(
+        help_text="Formato requerido: YYYY-MM-DDTHH:MM:SS",
+    )
+        
