@@ -1,3 +1,5 @@
+from urllib import response
+from django.http import HttpResponse
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -5,6 +7,10 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
 from django.utils import timezone
+import requests
+from datetime import datetime, timedelta
+
+from tomlkit import item
 
 from core.base.mixins import CustomDeleteMixin
 
@@ -20,7 +26,7 @@ from .serializers import (
     TicketDetailSerializer, TicketCreateSerializer, TicketUpdateSerializer,
     ReportedTimeSerializer, ReportedTimeCreateSerializer, NoteSerializer,
     NoteCreateSerializer, TicketAssignSerializer, TicketStatsSerializer, 
-    WorkingHoursSerializer
+    WorkingHoursSerializer, ProjectDateSerializer
 )
 from .filters import TicketFilter, ReportedTimeFilter
 from .permissions import IsTicketOwnerOrAssigned, IsAdminOrReadOnly
@@ -443,10 +449,141 @@ class WorkingHoursViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet para gestionar horas trabajadas en tickets
     """
+   
     queryset = WorkingHours.objects.all()
     serializer_class = WorkingHoursSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
     
-    @action(detail=False, methods=['get'])
-    def backlog(self, request):
-        pass
+        
+class ProjectDateViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProjectDateSerializer
+    
+    holidays = [];
+    weekDays = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+    schedules = [];
+    start_time = None
+    end_time = None
+    
+    def get_holidays(self):
+        return self.holidays;
+    
+    def set_holidays(self, year):
+        year = str(year)
+        url = 'https://api-colombia.com/api/v1/Holiday/year/'+ year
+        response = requests.get(url, verify=False)
+        try:
+            if response.status_code == 200:
+                self.holidays = [];
+                for holiday in response.json():
+                    date = holiday.get("date")
+                    onlyDate = date.split("T")[0]
+                    self.holidays.append( datetime.strptime(onlyDate, "%Y-%m-%d").date())
+        except:     
+            raise 
+       
+    def get_schedules(self):
+        return self.schedules;
+    
+    #Trae los horario registrados
+    def set_schedules(self):
+        schedulesRealized = WorkingHoursSerializer(WorkingHours.objects.all(), many=True)
+        self.schedules = schedulesRealized.data
+    
+    #Valida si un día es habil o no
+    def isWorkDay(self, date):
+        dateString = date
+        day = date.weekday()
+        self.set_holidays(date.year)
+        self.set_schedules()
+        if dateString in self.get_holidays():
+            return False
+        
+        for item in self.get_schedules():
+            if item.get("week_day") == self.weekDays[day]:
+                return True
+        
+        return False
+    
+    # Encuentra el siguiente día habil
+    def getNextWorkDay(self, date):
+        currentDay = date
+        holiday = True
+        while holiday:
+            nextDay = currentDay + timedelta(days=1)
+            if self.isWorkDay(nextDay):
+                holiday = False
+                break
+            currentDay = nextDay;
+        
+        return nextDay
+    
+    # combina la fecha con la hora para entregar el formato requerido.
+    def combineDateTime(self, date, time):
+        dateTime = datetime.combine(date, time)
+        dateTime = str(dateTime).replace(" ", "T")
+        dateTime = datetime.strptime(dateTime, "%Y-%m-%dT%H:%M:%S") 
+        return dateTime
+    
+    #Encuentra la hora de entra y salida de un dia de las semana.
+    def set_times(self, date):
+        for item in self.schedules: # Buscar el horario del día actual
+            if item.get("week_day") == self.weekDays[date.weekday()]:
+                self.start_time = item["start_time"]
+                self.end_time = item["end_time"]
+    
+    @action(detail=False, methods=['post'], url_path='project-date')
+    def findProjectDate(self, request):
+        try:
+            dateCurrent = datetime.strptime(request.data.get("date_creation"), "%Y-%m-%dT%H:%M:%S")        
+            remainigHours = request.data.get("ans")
+            timeDateInitial = dateCurrent.time()
+            dateCurrent = self.combineDateTime(dateCurrent, timeDateInitial)
+            self.set_schedules()
+            
+            while remainigHours > 0:
+                # Si no es día laborable, buscar el siguiente            
+                if not self.isWorkDay(dateCurrent.date()): 
+                    dateCurrent = self.getNextWorkDay(dateCurrent.date())
+                    self.set_times(dateCurrent)
+                    dateCurrent = self.combineDateTime(dateCurrent, datetime.strptime(self.start_time, "%H:%M:%S").time())
+                    continue 
+
+                self.set_times(dateCurrent)
+                    
+                dateStarTime = self.combineDateTime(dateCurrent, datetime.strptime(self.start_time, "%H:%M:%S").time())
+                # Si el momento actual es menor al hora de inicio de ese mismo día, ajustar a la hora de inicio del mismo día.
+                if dateCurrent < dateStarTime: 
+                    dateCurrent = dateStarTime
+                    
+                dateEndTime = self.combineDateTime(dateCurrent, datetime.strptime(self.end_time, "%H:%M:%S").time())
+                # si el momento actual es mayor o igual a la hora final dese dia, ajustar a la hora de inicio del siguiente día.
+                if dateCurrent >= dateEndTime:
+                    self.set_times(dateCurrent)
+                    dateCurrent = self.getNextWorkDay(dateCurrent.date())
+                    dateCurrent = self.combineDateTime(dateCurrent, datetime.strptime(self.start_time, "%H:%M:%S").time())
+                    continue
+                            
+                timeCurrenteEnd = self.combineDateTime(dateCurrent, datetime.strptime(self.end_time, "%H:%M:%S").time())
+                
+                # Calculo de el tiempo dispoble hasta final del dia actual 
+                avalibleDayTime = (timeCurrenteEnd - dateCurrent).total_seconds() / 3600 
+                #Si el tiempo restanten es menor al dispobible se suman las horas al momento actual
+                if remainigHours <= avalibleDayTime: 
+                    dateCurrent = dateCurrent + timedelta(hours=remainigHours)
+                    remainigHours = 0
+                    continue
+                
+                #Se restan la horas disponibles del día para calcular la horas restantes para el siguiente dái
+                remainigHours = remainigHours - avalibleDayTime
+                
+                #Se encuentra el siguiente dpia habil y se le suman las horas restante
+                dateCurrent = self.getNextWorkDay(dateCurrent.date())
+                self.set_times(dateCurrent)
+                dateCurrent = self.combineDateTime(dateCurrent, datetime.strptime(self.start_time, "%H:%M:%S").time())
+                    
+            return Response({"response": dateCurrent}, status=status.HTTP_200_OK)
+                
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
