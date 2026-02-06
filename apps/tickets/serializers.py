@@ -183,7 +183,7 @@ class TicketListSerializer(serializers.ModelSerializer):
             'id_ticket', 'ticket_title', 'ticket_service', 'ticket_priority',
             'status_id', 'service_name', 'priority_name', 'status_name',
             'reporter_user_name', 'assigned_to', 'create_at',
-            'estimated_closing_date', 'ticket_description'
+            'estimated_closing_date', 'ticket_description' , 'sub_program_name', 'ticket_ans'
         ]
 
 
