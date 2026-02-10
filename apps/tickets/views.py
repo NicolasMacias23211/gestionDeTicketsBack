@@ -10,8 +10,6 @@ from django.utils import timezone
 import requests
 from datetime import datetime, timedelta
 
-from tomlkit import item
-
 from core.base.mixins import CustomDeleteMixin
 
 from .models import (
@@ -159,6 +157,7 @@ class StatusViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     ViewSet para gestionar estados
     """
     queryset = Status.objects.all()
+    search_fields = ['is-backlog']
     serializer_class = StatusSerializer
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
 
@@ -533,7 +532,7 @@ class ProjectDateViewSet(viewsets.ViewSet):
                 self.start_time = item["start_time"]
                 self.end_time = item["end_time"]
     
-    @action(detail=False, methods=['post'], url_path='project-date')
+    @action(detail=False, methods=['post'])
     def findProjectDate(self, request):
         try:
             dateCurrent = datetime.strptime(request.data.get("date_creation"), "%Y-%m-%dT%H:%M:%S")        

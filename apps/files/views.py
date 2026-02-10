@@ -17,9 +17,9 @@ from .serializers import (
 )
 
 
-class FileUploadView(APIView):
+class FileManagementView(APIView):
     """
-    Vista para subir archivos al servidor de forma local.
+    Vista para gestionar archivos: subir (POST) y obtener (GET).
     Los archivos se guardan en la carpeta 'uploads' del proyecto.
     """
     parser_classes = (MultiPartParser, FormParser)
@@ -88,14 +88,6 @@ class FileUploadView(APIView):
                 {'message': f'Error al subir el archivo: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-
-class FileRetrieveView(APIView):
-    """
-    Vista para obtener archivos del servidor.
-    Puede recibir un nombre de archivo o múltiples nombres.
-    """
-    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         summary="Obtener archivo(s)",
