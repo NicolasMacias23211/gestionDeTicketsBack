@@ -227,7 +227,7 @@ class TicketUpdateSerializer(serializers.ModelSerializer):
         fields = [
             'ticket_title', 'ticket_description', 'ticket_attachments',
             'ticket_priority', 'assigned_to', 'status_id',
-            'ticket_closing_code', 'closing_date', 'estimated_closing_date'
+            'ticket_closing_code', 'closing_date', 'estimated_closing_date','ticket_service', 'ticket_ans', 'sub_program_name'
         ]
 
     def update(self, instance, validated_data):

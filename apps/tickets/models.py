@@ -376,6 +376,12 @@ class Status(models.Model):
         db_column='is-backlog',
         verbose_name='Es Backlog'
     )
+    is_completion = models.BooleanField(
+        default=False,
+        db_column='is-completion',
+        verbose_name='Es Completado',
+        help_text='Indica si este estado representa un cierre exitoso del ticket'
+    )
     ordering = models.IntegerField(
         verbose_name='Orden de los estados',
         db_column='ordering'
