@@ -4,6 +4,7 @@ Utilidades comunes para el proyecto
 from datetime import datetime, timedelta
 from typing import Optional
 import re
+from rest_framework.pagination import PageNumberPagination
 
 
 def generate_ticket_id() -> int:
@@ -185,3 +186,8 @@ class ResponseFormatter:
                 'total_items': total_items
             }
         }
+
+class Pagination(PageNumberPagination):
+    page_size = 20                      # defaultauro
+    page_size_query_param = 'page_size' # lo que envía el front
+    max_page_size = 100  

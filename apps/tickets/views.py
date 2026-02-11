@@ -1,3 +1,4 @@
+from core.utils.helpers import Pagination
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -134,6 +135,7 @@ class ANSViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['ans_name', 'ans_description']
+    pagination_class = Pagination
 
 
 class UserViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
