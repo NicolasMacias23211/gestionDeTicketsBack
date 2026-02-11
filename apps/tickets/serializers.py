@@ -183,7 +183,7 @@ class TicketListSerializer(serializers.ModelSerializer):
             'id_ticket', 'ticket_title', 'ticket_service', 'ticket_priority',
             'status_id', 'service_name', 'priority_name', 'status_name',
             'reporter_user_name', 'assigned_to', 'create_at',
-            'estimated_closing_date', 'ticket_description'
+            'estimated_closing_date', 'ticket_description' , 'sub_program_name', 'ticket_ans'
         ]
 
 
@@ -227,7 +227,7 @@ class TicketUpdateSerializer(serializers.ModelSerializer):
         fields = [
             'ticket_title', 'ticket_description', 'ticket_attachments',
             'ticket_priority', 'assigned_to', 'status_id',
-            'ticket_closing_code', 'closing_date', 'estimated_closing_date'
+            'ticket_closing_code', 'closing_date', 'estimated_closing_date','ticket_service', 'ticket_ans', 'sub_program_name'
         ]
 
     def update(self, instance, validated_data):
@@ -262,9 +262,18 @@ class TicketStatsSerializer(serializers.Serializer):
     by_service = serializers.DictField()
     by_status = serializers.DictField()
 
-class WorkingHoursSerializer(serializers.Serializer):
+
+class WorkingHoursSerializer(serializers.ModelSerializer):
     """Serializer para horas trabajadas en tickets"""
     class Meta:
         model = WorkingHours
         fields = '__all__'
         read_only_fields = ['id_working_hours']
+        
+
+class ProjectDateSerializer(serializers.Serializer):
+    ans = serializers.IntegerField()
+    date_creation = serializers.CharField(
+        help_text="Formato requerido: YYYY-MM-DDTHH:MM:SS",
+    )
+        

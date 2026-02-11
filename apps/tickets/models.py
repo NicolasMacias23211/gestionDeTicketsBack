@@ -376,6 +376,16 @@ class Status(models.Model):
         db_column='is-backlog',
         verbose_name='Es Backlog'
     )
+    is_completion = models.BooleanField(
+        default=False,
+        db_column='is-completion',
+        verbose_name='Es Completado',
+        help_text='Indica si este estado representa un cierre exitoso del ticket'
+    )
+    ordering = models.IntegerField(
+        verbose_name='Orden de los estados',
+        db_column='ordering'
+    )
 
     class Meta:
         db_table = 'status'
@@ -609,7 +619,8 @@ class WorkingHours(models.Model):
     week_day = models.CharField(
         max_length=15,
         db_column='week-day',
-        verbose_name='Día de la Semana'
+        verbose_name='Día de la Semana',
+        unique=True
     )
     start_time = models.TimeField(
         db_column='start-time',

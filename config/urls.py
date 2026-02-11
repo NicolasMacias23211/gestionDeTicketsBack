@@ -38,6 +38,8 @@ urlpatterns = [
     path('api/auth/', include('apps.authentication.urls')),
     
     path('api/', include('apps.tickets.urls')),
+    
+    path('api/', include('apps.files.urls')),
 ]
 
 if settings.DEBUG:
