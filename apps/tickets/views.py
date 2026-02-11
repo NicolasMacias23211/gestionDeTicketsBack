@@ -9,6 +9,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 import requests
 from datetime import datetime, timedelta
+from core.utils.helpers import Pagination
 
 from core.base.mixins import CustomDeleteMixin
 
@@ -138,6 +139,7 @@ class ANSViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['ans_name', 'ans_description']
+    pagination_class = Pagination
 
 
 class UserViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
