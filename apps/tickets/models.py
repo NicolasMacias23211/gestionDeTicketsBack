@@ -384,7 +384,8 @@ class Status(models.Model):
     )
     ordering = models.IntegerField(
         verbose_name='Orden de los estados',
-        db_column='ordering'
+        db_column='ordering',
+        null=True,
     )
 
     class Meta:
