@@ -1,12 +1,24 @@
 import django_filters
 from django.db.models import Q
 from .models import Ticket, ReportedTime
+from django.utils import  timezone
+from datetime import timedelta
 
 
 class TicketFilter(django_filters.FilterSet):
     """
     Filtros personalizados para tickets
     """
+
+    ticket_ans = django_filters.NumberFilter(
+        field_name='ticket_ans'
+    )
+
+    elapsed_minutes = django_filters.NumberFilter(
+        field_name='create_at',
+        method='filter_elapsed_minutes'
+    )
+    
     # Filtros de fecha
     create_at_after = django_filters.DateTimeFilter(
         field_name='create_at',
@@ -40,7 +52,7 @@ class TicketFilter(django_filters.FilterSet):
     # Filtros por relaciones
     service = django_filters.NumberFilter(
         field_name='ticket_service__id_services',
-        label='Servicio'
+        label='Servicio' 
     )
     priority = django_filters.CharFilter(
         field_name='ticket_priority__priority_name',
@@ -76,6 +88,8 @@ class TicketFilter(django_filters.FilterSet):
             'ticket_service': ['exact'],
             'ticket_priority': ['exact'],
             'status_id': ['exact'],
+            'ticket_ans': ['exact'],
+            'create_at': ['gte', 'lte'],
         }
 
     def filter_search(self, queryset, name, value):
@@ -110,6 +124,14 @@ class TicketFilter(django_filters.FilterSet):
         return queryset.filter(
             Q(estimated_closing_date__gte=timezone.now()) |
             Q(closing_date__isnull=False)
+        )
+        
+    def filter_elapsed_minutes(self, queryset, name, value):
+        minutes = int(value)
+        now = timezone.now()
+
+        return queryset.filter(
+            create_at__gte=now - timedelta(minutes=int(value))
         )
 
 
