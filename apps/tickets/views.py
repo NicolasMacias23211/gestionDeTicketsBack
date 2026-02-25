@@ -85,6 +85,254 @@ class EUserViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
             return EUserCreateSerializer
         return EUserSerializer
 
+    @action(detail=False, methods=['get'], url_path='metricas-cumplimiento')
+    def metricas_cumplimiento(self, request):
+        """
+        Obtiene el porcentaje de cumplimiento de un usuario en un rango de fechas
+        
+        Parámetros query:
+        - network_user (obligatorio): Usuario a consultar
+        - fecha_desde (opcional): Fecha inicio en formato YYYY-MM-DD (por defecto: día 1 del mes actual)
+        - fecha_hasta (opcional): Fecha fin en formato YYYY-MM-DD (por defecto: día actual)
+        """
+        from datetime import datetime, time
+        
+        # Obtener parámetros
+        network_user = request.query_params.get('network_user')
+        
+        if not network_user:
+            return Response({
+                'success': False,
+                'message': 'El parámetro network_user es obligatorio'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar que el usuario existe
+        try:
+            user = EUser.objects.get(network_user=network_user)
+        except EUser.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': f'El usuario {network_user} no existe'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Configurar fechas
+        now = timezone.now()
+        
+        # Fecha desde: día 1 del mes actual a las 00:00:00
+        fecha_desde_str = request.query_params.get('fecha_desde')
+        if fecha_desde_str:
+            try:
+                fecha_desde = datetime.strptime(fecha_desde_str, '%Y-%m-%d')
+                fecha_desde = timezone.make_aware(datetime.combine(fecha_desde.date(), time.min))
+            except ValueError:
+                return Response({
+                    'success': False,
+                    'message': 'Formato de fecha_desde inválido. Use YYYY-MM-DD'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            fecha_desde = timezone.make_aware(datetime(now.year, now.month, 1, 0, 0, 0))
+        
+        # Fecha hasta: día actual a las 23:59:59
+        fecha_hasta_str = request.query_params.get('fecha_hasta')
+        if fecha_hasta_str:
+            try:
+                fecha_hasta = datetime.strptime(fecha_hasta_str, '%Y-%m-%d')
+                fecha_hasta = timezone.make_aware(datetime.combine(fecha_hasta.date(), time.max))
+            except ValueError:
+                return Response({
+                    'success': False,
+                    'message': 'Formato de fecha_hasta inválido. Use YYYY-MM-DD'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            fecha_hasta = timezone.make_aware(datetime.combine(now.date(), time.max))
+        
+        # Consultar tickets asignados al usuario en el rango de fechas
+        tickets = Ticket.objects.filter(
+            assigned_to=network_user,
+            create_at__gte=fecha_desde,
+            create_at__lte=fecha_hasta
+        )
+        
+        total_tickets = tickets.count()
+        
+        if total_tickets == 0:
+            return Response({
+                'success': True,
+                'data': {
+                    'network_user': network_user,
+                    'nombre_completo': user.name + ' ' + user.last_name,
+                    'fecha_desde': fecha_desde.strftime('%Y-%m-%d'),
+                    'fecha_hasta': fecha_hasta.strftime('%Y-%m-%d'),
+                    'total_tickets': 0,
+                    'tickets_cumplimiento': 0,
+                    'porcentaje_cumplimiento': 0
+                }
+            })
+        
+        # Contar tickets con cumplimiento = True
+        tickets_cumplimiento = tickets.filter(cumplimiento=True).count()
+        
+        # Calcular porcentaje
+        porcentaje_cumplimiento = round((tickets_cumplimiento / total_tickets) * 100, 2)
+        
+        return Response({
+            'success': True,
+            'data': {
+                'network_user': network_user,
+                'nombre_completo': user.name + ' ' + user.last_name,
+                'fecha_desde': fecha_desde.strftime('%Y-%m-%d'),
+                'fecha_hasta': fecha_hasta.strftime('%Y-%m-%d'),
+                'total_tickets': total_tickets,
+                'tickets_cumplimiento': tickets_cumplimiento,
+                'porcentaje_cumplimiento': porcentaje_cumplimiento
+            }
+        })
+
+    @action(detail=False, methods=['get'], url_path='metricas-ocupacion')
+    def metricas_ocupacion(self, request):
+        """
+        Obtiene el porcentaje de ocupación de un usuario en un rango de fechas
+        
+        Parámetros query:
+        - network_user (obligatorio): Usuario a consultar
+        - fecha_desde (opcional): Fecha inicio en formato YYYY-MM-DD (por defecto: día 1 del mes actual)
+        - fecha_hasta (opcional): Fecha fin en formato YYYY-MM-DD (por defecto: día actual)
+        """
+        from datetime import datetime, time
+        
+        # Obtener parámetros
+        network_user = request.query_params.get('network_user')
+        
+        if not network_user:
+            return Response({
+                'success': False,
+                'message': 'El parámetro network_user es obligatorio'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar que el usuario existe
+        try:
+            user = EUser.objects.get(network_user=network_user)
+        except EUser.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': f'El usuario {network_user} no existe'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Configurar fechas
+        now = timezone.now()
+        
+        # Fecha desde: día 1 del mes actual a las 00:00:00
+        fecha_desde_str = request.query_params.get('fecha_desde')
+        if fecha_desde_str:
+            try:
+                fecha_desde = datetime.strptime(fecha_desde_str, '%Y-%m-%d')
+                fecha_desde = timezone.make_aware(datetime.combine(fecha_desde.date(), time.min))
+            except ValueError:
+                return Response({
+                    'success': False,
+                    'message': 'Formato de fecha_desde inválido. Use YYYY-MM-DD'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            fecha_desde = timezone.make_aware(datetime(now.year, now.month, 1, 0, 0, 0))
+        
+        # Fecha hasta: día actual a las 23:59:59
+        fecha_hasta_str = request.query_params.get('fecha_hasta')
+        if fecha_hasta_str:
+            try:
+                fecha_hasta = datetime.strptime(fecha_hasta_str, '%Y-%m-%d')
+                fecha_hasta = timezone.make_aware(datetime.combine(fecha_hasta.date(), time.max))
+            except ValueError:
+                return Response({
+                    'success': False,
+                    'message': 'Formato de fecha_hasta inválido. Use YYYY-MM-DD'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            fecha_hasta = timezone.make_aware(datetime.combine(now.date(), time.max))
+        
+        # Consultar tiempos reportados por el usuario en el rango de fechas
+        reported_times = ReportedTime.objects.filter(
+            network_user=network_user,
+            date_reported__gte=fecha_desde,
+            date_reported__lte=fecha_hasta
+        )
+        
+        # Sumar todos los reported_time
+        total_reported_seconds = 0
+        for rt in reported_times:
+            # Convertir time a segundos
+            reported_time = rt.reported_time
+            seconds = reported_time.hour * 3600 + reported_time.minute * 60 + reported_time.second
+            total_reported_seconds += seconds
+        
+        # Convertir a horas
+        total_reported_hours = round(total_reported_seconds / 3600, 2)
+        
+        # Obtener horarios laborales
+        working_hours = WorkingHours.objects.all()
+        
+        if not working_hours.exists():
+            return Response({
+                'success': False,
+                'message': 'No hay horarios laborales configurados'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Crear diccionario de horarios por día de la semana
+        # Python weekday(): 0=Lunes, 1=Martes, ..., 6=Domingo
+        weekday_map = {
+            'Lunes': 0,
+            'Martes': 1,
+            'Miércoles': 2,
+            'Jueves': 3,
+            'Viernes': 4,
+            'Sábado': 5,
+            'Domingo': 6
+        }
+        
+        working_schedule = {}
+        for wh in working_hours:
+            weekday_num = weekday_map.get(wh.week_day)
+            if weekday_num is not None:
+                # Calcular horas del día
+                start = datetime.combine(datetime.today(), wh.start_time)
+                end = datetime.combine(datetime.today(), wh.end_time)
+                hours_per_day = (end - start).total_seconds() / 3600
+                working_schedule[weekday_num] = hours_per_day
+        
+        # Calcular horas disponibles en el rango de fechas
+        total_working_hours = 0
+        current_date = fecha_desde.date()
+        end_date = fecha_hasta.date()
+        
+        while current_date <= end_date:
+            weekday = current_date.weekday()
+            if weekday in working_schedule:
+                hours = working_schedule[weekday]
+                # Restar 1.5 horas por almuerzo y desayuno
+                hours -= 1.5
+                total_working_hours += hours
+            current_date += timedelta(days=1)
+        
+        total_working_hours = round(total_working_hours, 2)
+        
+        # Calcular porcentaje de ocupación
+        if total_working_hours > 0:
+            porcentaje_ocupacion = round((total_reported_hours / total_working_hours) * 100, 2)
+        else:
+            porcentaje_ocupacion = 0
+        
+        return Response({
+            'success': True,
+            'data': {
+                'network_user': network_user,
+                'nombre_completo': user.name + ' ' + user.last_name,
+                'fecha_desde': fecha_desde.strftime('%Y-%m-%d'),
+                'fecha_hasta': fecha_hasta.strftime('%Y-%m-%d'),
+                'total_horas_reportadas': total_reported_hours,
+                'total_horas_disponibles': total_working_hours,
+                'porcentaje_ocupacion': porcentaje_ocupacion
+            }
+        })
+
 
 class TicketPriorityViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
@@ -355,6 +603,44 @@ class TicketViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
         
         serializer = TicketStatsSerializer(data)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='weekly-stats')
+    def weekly_stats(self, request):
+        """
+        Obtiene tickets creados y cerrados día a día en los últimos 7 días (incluyendo hoy).
+
+        Respuesta:
+        - datos_diarios: lista con conteo de tickets creados (create_at) y cerrados (closing_date) por día
+        """
+        day_names = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+        today = timezone.localdate()
+        fecha_hasta = today
+        fecha_desde = today - timedelta(days=6)
+
+        datos_diarios = []
+        for i in range(7):
+            current_date = fecha_desde + timedelta(days=i)
+
+            creados = Ticket.objects.filter(create_at__date=current_date).count()
+            cerrados = Ticket.objects.filter(closing_date__date=current_date).count()
+
+            datos_diarios.append({
+                'dia': day_names[current_date.weekday()],
+                'fecha': current_date.strftime('%Y-%m-%d'),
+                'creados': creados,
+                'cerrados': cerrados,
+            })
+
+        return Response({
+            'success': True,
+            'data': {
+                'periodo': 'ultima_semana',
+                'fecha_desde': fecha_desde.strftime('%Y-%m-%d'),
+                'fecha_hasta': fecha_hasta.strftime('%Y-%m-%d'),
+                'datos_diarios': datos_diarios,
+            }
+        })
 
     @action(detail=False, methods=['get'])
     def backlog(self, request):

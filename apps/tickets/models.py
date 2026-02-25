@@ -486,6 +486,13 @@ class Ticket(models.Model):
         db_column='estimated-closing-date',
         verbose_name='Fecha Estimada de Cierre'
     )
+    cumplimiento = models.BooleanField(
+        null=True,
+        blank=True,
+        db_column='cumplimiento',
+        verbose_name='Cumplimiento',
+        help_text='Indica si el ticket cumple con las métricas establecidas'
+    )
     status_id = models.ForeignKey(
         Status,
         on_delete=models.PROTECT,

@@ -183,7 +183,7 @@ class TicketListSerializer(serializers.ModelSerializer):
             'id_ticket', 'ticket_title', 'ticket_service', 'ticket_priority',
             'status_id', 'service_name', 'priority_name', 'status_name',
             'reporter_user_name', 'assigned_to', 'create_at',
-            'estimated_closing_date', 'ticket_description' , 'sub_program_name', 'ticket_ans'
+            'estimated_closing_date', 'closing_date', 'cumplimiento', 'ticket_description', 'sub_program_name', 'ticket_ans'
         ]
 
 
@@ -211,7 +211,8 @@ class TicketCreateSerializer(serializers.ModelSerializer):
         fields = [
             'id_ticket', 'ticket_title', 'ticket_description', 'ticket_attachments',
             'ticket_service', 'ticket_priority', 'ticket_ans',
-            'reporter_user', 'sub_program_name', 'status_id', 'assigned_to'
+            'reporter_user', 'sub_program_name', 'status_id', 'assigned_to',
+            'cumplimiento', 'closing_date'
         ]
         read_only_fields = ['id_ticket']
 
@@ -227,7 +228,8 @@ class TicketUpdateSerializer(serializers.ModelSerializer):
         fields = [
             'ticket_title', 'ticket_description', 'ticket_attachments',
             'ticket_priority', 'assigned_to', 'status_id',
-            'ticket_closing_code', 'closing_date', 'estimated_closing_date','ticket_service', 'ticket_ans', 'sub_program_name'
+            'ticket_closing_code', 'closing_date', 'estimated_closing_date',
+            'ticket_service', 'ticket_ans', 'sub_program_name', 'cumplimiento'
         ]
 
     def update(self, instance, validated_data):
