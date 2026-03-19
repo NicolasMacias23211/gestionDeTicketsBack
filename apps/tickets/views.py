@@ -642,6 +642,77 @@ class TicketViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
             }
         })
 
+    @action(detail=False, methods=['get'], url_path='dashboard-stats')
+    def dashboard_stats(self, request):
+        """
+        Obtiene estadísticas personales del dashboard para un usuario específico.
+
+        Parámetros query:
+        - assigned_to (obligatorio): network_user del usuario a consultar
+
+        Respuesta:
+        - assigned: Total de tickets asignados activos (sin fecha de cierre)
+        - in_progress: Tickets activos cuyo estado tiene un valor de ordering
+        - completed_this_month: Tickets completados en el mes actual (cumplimiento=True)
+        - overdue: Tickets vencidos en el mes actual (cumplimiento=False)
+        """
+        assigned_to = request.query_params.get('assigned_to')
+
+        if not assigned_to:
+            return Response({
+                'success': False,
+                'message': 'El parámetro assigned_to es obligatorio'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verificar que el usuario existe
+        if not EUser.objects.filter(network_user=assigned_to).exists():
+            return Response({
+                'success': False,
+                'message': f'El usuario {assigned_to} no existe'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        now = timezone.now()
+        first_day_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        # assigned: tickets activos (sin closing_date) asignados a este usuario
+        assigned = Ticket.objects.filter(
+            closing_date__isnull=True,
+            assigned_to=assigned_to
+        ).count()
+
+        # in_progress: tickets activos de este usuario cuyo status tiene ordering con valor
+        in_progress = Ticket.objects.filter(
+            closing_date__isnull=True,
+            assigned_to=assigned_to,
+            status_id__ordering__isnull=False
+        ).count()
+
+        # completed_this_month: tickets de este usuario cerrados este mes con cumplimiento=True
+        completed_this_month = Ticket.objects.filter(
+            assigned_to=assigned_to,
+            closing_date__gte=first_day_of_month,
+            closing_date__lte=now,
+            cumplimiento=True
+        ).count()
+
+        # overdue: tickets de este usuario cerrados este mes con cumplimiento=False
+        overdue = Ticket.objects.filter(
+            assigned_to=assigned_to,
+            closing_date__gte=first_day_of_month,
+            closing_date__lte=now,
+            cumplimiento=False
+        ).count()
+
+        return Response({
+            'success': True,
+            'data': {
+                'assigned': assigned,
+                'in_progress': in_progress,
+                'completed_this_month': completed_this_month,
+                'overdue': overdue,
+            }
+        })
+
     @action(detail=False, methods=['get'])
     def backlog(self, request):
         """
@@ -731,6 +802,80 @@ class NoteViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
             queryset = queryset.filter(visible_to_client=True)
         
         return queryset
+
+    @action(detail=False, methods=['get'], url_path='recent-activity')
+    def recent_activity(self, request):
+        """
+        Obtiene las últimas notas de los tickets asignados a un usuario.
+
+        Parámetros query:
+        - assigned_to (obligatorio): network_user del usuario
+        - limit (opcional): cantidad de notas a retornar (por defecto 5)
+        """
+        assigned_to = request.query_params.get('assigned_to')
+
+        if not assigned_to:
+            return Response({
+                'success': False,
+                'message': 'El parámetro assigned_to es obligatorio'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verificar que el usuario existe
+        if not EUser.objects.filter(network_user=assigned_to).exists():
+            return Response({
+                'success': False,
+                'message': f'El usuario {assigned_to} no existe'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Limit con valor por defecto de 5
+        try:
+            limit = int(request.query_params.get('limit', 5))
+        except (ValueError, TypeError):
+            limit = 5
+
+        # 1 mes calendario hacia atrás desde hoy
+        now = timezone.now()
+        one_month_ago = now - timedelta(days=30)
+
+        # Notas del último mes en tickets asignados a este usuario
+        notes = (
+            Note.objects
+            .select_related('id_ticket', 'network_user')
+            .filter(
+                id_ticket__assigned_to=assigned_to,
+                create_at__gte=one_month_ago,
+                create_at__lte=now
+            )
+            .order_by('-create_at')[:limit]
+        )
+
+        data = []
+        for note in notes:
+            # Construir full_name del autor de la nota
+            full_name = ''
+            if note.network_user:
+                parts = [note.network_user.name]
+                if note.network_user.middle_name:
+                    parts.append(note.network_user.middle_name)
+                parts.append(note.network_user.last_name)
+                if note.network_user.second_last_name:
+                    parts.append(note.network_user.second_last_name)
+                full_name = ' '.join(parts)
+
+            data.append({
+                'id_note': note.id_note,
+                'note_preview': note.note[:100] + ('...' if len(note.note) > 100 else ''),
+                'id_ticket': note.id_ticket.id_ticket,
+                'ticket_title': note.id_ticket.ticket_title,
+                'network_user': note.network_user.network_user if note.network_user else None,
+                'full_name': full_name,
+                'create_at': note.create_at,
+            })
+
+        return Response({
+            'success': True,
+            'data': data
+        })
 
 class WorkingHoursViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
