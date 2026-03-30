@@ -9,6 +9,11 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
+# Sub-path prefix cuando Django está detrás de un reverse proxy con ruta base.
+# Ejemplo: /e-learning/e-seus  (sin slash final)
+# Dejar vacío si Django está en la raíz del dominio.
+FORCE_SCRIPT_NAME = config('FORCE_SCRIPT_NAME', default='') or None
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -221,7 +226,7 @@ SPECTACULAR_SETTINGS = {
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
     'SERVERS': [
         {'url': 'http://localhost:8000', 'description': 'Servidor de Desarrollo'},
-        {'url': 'http://127.0.0.1:8000', 'description': 'Servidor Local'},
+        {'url': 'https://pruebasaprendizaje.emtelco.co/e-learning/e-seus/api/docs', 'description': 'Servidor de pruebas'},
     ],
     'EXTERNAL_DOCS': {
         'description': 'Documentación adicional',

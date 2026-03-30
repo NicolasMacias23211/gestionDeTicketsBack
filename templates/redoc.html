@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="es">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sistema de Gestión de Tickets E-SEUS API</title>
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
-    <link rel="shortcut icon" href="/static/Emtelco.ico" />
+    <link rel="shortcut icon" href="{% static 'Emtelco.ico' %}" />
     <style>
         body {
             margin: 0;
@@ -15,7 +16,7 @@
 </head>
 <body>
     <redoc 
-        spec-url="{{ schema_url }}"
+        spec-url="{% url 'schema' %}"
         lazy-rendering="true"
         native-scrollbars
         path-in-middle-panel

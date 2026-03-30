@@ -19,17 +19,17 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView, RedirectView
+from django.urls import reverse_lazy
 from datetime import datetime
 from drf_spectacular.views import SpectacularAPIView
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='/api/docs/', permanent=False), name='root'),
+    path('', RedirectView.as_view(url=reverse_lazy('api-docs'), permanent=False), name='root'),
     path('admin/', admin.site.urls),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', TemplateView.as_view(
         template_name='redoc.html',
         extra_context={
-            'schema_url': '/api/schema/',
             'title': 'Sistema de Gestión de Tickets E-SEUS API',
             'year': datetime.now().year
         }
