@@ -9,6 +9,9 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
+URL_LDAP = config('URL_LDAP')
+TOKEN_LDAP = config('TOKEN_LDAP')
+
 # Sub-path prefix cuando Django está detrás de un reverse proxy con ruta base.
 # Ejemplo: /e-learning/e-seus  (sin slash final)
 # Dejar vacío si Django está en la raíz del dominio.
