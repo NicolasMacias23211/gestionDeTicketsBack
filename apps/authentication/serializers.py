@@ -62,13 +62,6 @@ class LDAPAuthSerializer(serializers.Serializer):
         """
         refresh = RefreshToken.for_user(user)
         
-        # Agregar información del LDAP al token
-        refresh['username'] = ldap_data['user']
-        refresh['email'] = ldap_data['mail']
-        refresh['full_name'] = ldap_data['full_name']
-        refresh['position'] = ldap_data['position']
-        refresh['document'] = ldap_data['document']
-        
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
