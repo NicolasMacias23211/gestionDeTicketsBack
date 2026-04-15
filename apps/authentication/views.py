@@ -1,3 +1,9 @@
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+import requests
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -66,22 +72,54 @@ class LDAPAuthView(APIView):
         description="Autenticación mediante datos de LDAP. Recibe la respuesta de la API externa de LDAP y genera tokens JWT."
     )
     def post(self, request):
-        # Verificar si viene el error de credenciales incorrectas
-        if 'general' in request.data:
-            return Response(
-                {'general': request.data['general']},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Validacion de parametros y petición al LDAP
+        user = request.data.get("user")
+        password = request.data.get("password")
         
-        serializer = LDAPAuthSerializer(data=request.data)
-        
-        if not serializer.is_valid():
-            return Response(
-                {'general': 'Datos de LDAP inválidos o incompletos'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
+
+        # Validar parametros
+        if not user or not password:
+            return Response({"error": "Usuario y contraseña requeridos"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Petición al Endpoint LDAP
+        urlLdap = os.environ.get('URL_LDAP')
+
+        # Header con tocken Bearer
+        headers = {
+            "Authorization": "Bearer " + os.environ.get('TOKEN_LDAP')
+        }
+
+        # Enviar petición como multipart/form-data
+        responseLdap = requests.post(
+            urlLdap,
+            headers=headers,
+            files={
+                "user": (None, user),
+                "password": (None, password)
+            },
+            timeout=6
+        )
         try:
+            ldap_json = responseLdap.json()
+            if 'general' in ldap_json:
+                return Response({
+                        'success': True,
+                        'message': ldap_json['general']
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            serializer = LDAPAuthSerializer(data=ldap_json)
+            
+            if not serializer.is_valid():
+                return Response({
+                        'success': True,
+                        'message': 'Datos de LDAP inválidos o incompletos'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        
             ldap_data = serializer.validated_data['ldap']
             
             # Crear o actualizar usuario (sin contraseña)

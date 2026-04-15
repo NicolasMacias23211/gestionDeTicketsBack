@@ -409,7 +409,8 @@ class StatusViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     queryset = Status.objects.all()
     search_fields = ['is-backlog']
     serializer_class = StatusSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
 
 
 class TicketViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
