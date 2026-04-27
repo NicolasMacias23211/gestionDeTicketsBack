@@ -51,3 +51,7 @@ django-extensions==3.2.3
 
 # Environment Variables
 python-dotenv==1.2.2
+
+#Tareas Programadas y Cache
+celery==5.6.3
+redis==7.4.0

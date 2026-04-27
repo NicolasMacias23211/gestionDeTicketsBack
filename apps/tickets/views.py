@@ -1,3 +1,5 @@
+from celery import shared_task
+from django.core.cache import cache
 from urllib import response
 from django.http import HttpResponse
 from rest_framework import viewsets, status, filters
@@ -8,7 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
 from django.utils import timezone
 import requests
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from core.utils.helpers import Pagination
 
 from core.base.mixins import CustomDeleteMixin
@@ -29,7 +31,6 @@ from .serializers import (
 )
 from .filters import TicketFilter, ReportedTimeFilter
 from .permissions import IsTicketOwnerOrAssigned, IsAdminOrReadOnly
-
 
 class ClientViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
     """
@@ -898,24 +899,54 @@ class ProjectDateViewSet(viewsets.ViewSet):
     schedules = [];
     start_time = None
     end_time = None
+
+    # función reutilizable en tu app
+    def get_holidays(self, request):
+        holidays = cache.get("holidays")
+        
+        if holidays is None:
+            # fallback si el cache fue limpiado
+            self.set_holidays();
+
+        holidays = cache.get("holidays", [])
+        return holidays
     
-    def get_holidays(self):
-        return self.holidays;
-    
-    def set_holidays(self, year):
-        year = str(year)
-        url = 'https://api-colombia.com/api/v1/Holiday/year/'+ year
+    @shared_task
+    def set_holidays():
+        year = timezone.now().year
+        url = f'https://api-colombia.com/api/v1/Holiday/year/{year}'
         response = requests.get(url, verify=False)
         try:
             if response.status_code == 200:
-                self.holidays = [];
+                holidays = [];
                 for holiday in response.json():
                     date = holiday.get("date")
                     onlyDate = date.split("T")[0]
-                    self.holidays.append( datetime.strptime(onlyDate, "%Y-%m-%d").date())
-        except:     
-            raise 
-       
+                    holidays.append( datetime.strptime(onlyDate, "%Y-%m-%d").date())
+                    
+                cache.set("holidays", holidays, timeout=None)
+        except Exception as e:     
+            return Response({
+                'success': False,
+                'message': str(e),
+                'data': []
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'], url_path='holidays')
+    def holidays(self, request):
+        try:
+            return Response({
+                'success': True,
+                'message': str('Se obtuvieron los días festivos correctamente'),
+                'data': self.get_holidays(self)
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': str('Error al obtener los días festivos '),
+                'data': []
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
     def get_schedules(self):
         return self.schedules;
     
@@ -966,8 +997,8 @@ class ProjectDateViewSet(viewsets.ViewSet):
                 self.start_time = item["start_time"]
                 self.end_time = item["end_time"]
     
-    @action(detail=False, methods=['post'])
-    def findProjectDate(self, request):
+    @action(detail=False, methods=['post'], url_path='calculate-date')
+    def post(self, request):
         try:
             dateCurrent = datetime.strptime(request.data.get("date_creation"), "%Y-%m-%dT%H:%M:%S")        
             remainigHours = request.data.get("ans")

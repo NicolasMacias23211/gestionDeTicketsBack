@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -11,6 +12,14 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(','
 
 URL_LDAP = config('URL_LDAP')
 TOKEN_LDAP = config('TOKEN_LDAP')
+
+
+CELERY_BEAT_SCHEDULE = {
+    'actualizar-festivos-diario': {
+        'task': 'mi_app.tasks.set_holidays',
+        'schedule': crontab(hour=3, minute=0),
+    },
+}
 
 # Sub-path prefix cuando Django está detrás de un reverse proxy con ruta base.
 # Ejemplo: /e-learning/e-seus  (sin slash final)
