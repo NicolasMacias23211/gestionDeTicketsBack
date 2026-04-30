@@ -901,7 +901,7 @@ class ProjectDateViewSet(viewsets.ViewSet):
     end_time = None
 
     # función reutilizable en tu app
-    def get_holidays(self, request):
+    def get_holidays(self):
         holidays = cache.get("holidays")
         
         if holidays is None:
@@ -938,7 +938,7 @@ class ProjectDateViewSet(viewsets.ViewSet):
             return Response({
                 'success': True,
                 'message': str('Se obtuvieron los días festivos correctamente'),
-                'data': self.get_holidays(self)
+                'data': self.get_holidays()
             }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({
@@ -959,7 +959,7 @@ class ProjectDateViewSet(viewsets.ViewSet):
     def isWorkDay(self, date):
         dateString = date
         day = date.weekday()
-        self.set_holidays(date.year)
+        self.set_holidays()
         self.set_schedules()
         if dateString in self.get_holidays():
             return False
