@@ -278,4 +278,67 @@ class ProjectDateSerializer(serializers.Serializer):
     date_creation = serializers.CharField(
         help_text="Formato requerido: YYYY-MM-DDTHH:MM:SS",
     )
-        
+
+
+class TicketReporteDriverSerializer(serializers.Serializer):
+    """Serializer para el reporte driver de tickets (por usuario y cliente)"""
+    euser_nombre = serializers.CharField()
+    network_user = serializers.CharField()
+    cliente = serializers.CharField()
+    id_ticket = serializers.IntegerField()
+    ticket_title = serializers.CharField()
+    fecha_creacion = serializers.DateTimeField()
+    fecha_cierre = serializers.DateTimeField(allow_null=True)
+    fecha_estimada_cierre = serializers.DateTimeField(allow_null=True)
+    tiempo_ticket = serializers.CharField()
+    tiempo_usuario_cliente = serializers.CharField()
+    porcentaje_cliente = serializers.FloatField()
+    tiempo_total_usuario = serializers.CharField()
+    cumple = serializers.BooleanField(allow_null=True)
+
+
+class TicketReporteGeneralSerializer(serializers.ModelSerializer):
+    """Serializer para el reporte general de tickets"""
+    fecha_creacion = serializers.DateTimeField(source='create_at')
+    cliente = serializers.SerializerMethodField()
+    tipo_servicio = serializers.CharField(source='ticket_service.service_name', default=None)
+    tiempo_total = serializers.SerializerMethodField()
+    euser_nombre = serializers.SerializerMethodField()
+    cumple = serializers.BooleanField(source='cumplimiento')
+    fecha_cierre = serializers.DateTimeField(source='closing_date')
+    fecha_estimada_cierre = serializers.DateTimeField(source='estimated_closing_date')
+
+    class Meta:
+        model = Ticket
+        fields = [
+            'id_ticket', 'fecha_creacion', 'cliente', 'tipo_servicio',
+            'tiempo_total', 'euser_nombre', 'cumple', 'fecha_cierre',
+            'fecha_estimada_cierre',
+        ]
+
+    def get_cliente(self, obj) -> str | None:
+        try:
+            return obj.sub_program_name.program_name.client_name.client_name
+        except AttributeError:
+            return None
+
+    def get_tiempo_total(self, obj) -> str:
+        total_seconds = 0
+        for rt in obj.reportedtime_set.all():
+            t = rt.reported_time
+            total_seconds += t.hour * 3600 + t.minute * 60 + t.second
+        hours, remainder = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f'{hours:02}:{minutes:02}:{seconds:02}'
+
+    def get_euser_nombre(self, obj) -> str | None:
+        euser = obj.assigned_to
+        if not euser:
+            return None
+        parts = [euser.name]
+        if euser.middle_name:
+            parts.append(euser.middle_name)
+        parts.append(euser.last_name)
+        if euser.second_last_name:
+            parts.append(euser.second_last_name)
+        return ' '.join(parts)

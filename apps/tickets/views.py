@@ -24,9 +24,11 @@ from .serializers import (
     TicketUserSerializer, StatusSerializer, TicketListSerializer,
     TicketDetailSerializer, TicketCreateSerializer, TicketUpdateSerializer,
     ReportedTimeSerializer, ReportedTimeCreateSerializer, NoteSerializer,
-    NoteCreateSerializer, TicketAssignSerializer, TicketStatsSerializer, 
-    WorkingHoursSerializer, ProjectDateSerializer
+    NoteCreateSerializer, TicketAssignSerializer, TicketStatsSerializer,
+    WorkingHoursSerializer, ProjectDateSerializer, TicketReporteGeneralSerializer,
+    TicketReporteDriverSerializer
 )
+
 from .filters import TicketFilter, ReportedTimeFilter
 from .permissions import IsTicketOwnerOrAssigned, IsAdminOrReadOnly
 
@@ -713,6 +715,227 @@ class TicketViewSet(CustomDeleteMixin, viewsets.ModelViewSet):
                 'overdue': overdue,
             }
         })
+
+    @action(detail=False, methods=['get'], url_path='reporte-general')
+    def reporte_general(self, request):
+        """
+        Reporte general de tickets en un rango de fechas.
+
+        Parámetros query:
+        - fecha_desde (obligatorio): YYYY-MM-DD — inicio del rango (por create_at)
+        - fecha_hasta (obligatorio): YYYY-MM-DD — fin del rango (inclusive)
+        - cliente      (opcional): nombre exacto del cliente
+        - id_servicio  (opcional): ID del tipo de servicio
+        - network_user (opcional): network_user del EUser asignado
+        - cumple       (opcional): true / false — si se omite devuelve todos
+        """
+        from datetime import datetime, time as dt_time
+
+        fecha_desde_str = request.query_params.get('fecha_desde')
+        fecha_hasta_str = request.query_params.get('fecha_hasta')
+
+        if not fecha_desde_str or not fecha_hasta_str:
+            return Response({
+                'success': False,
+                'message': 'Los parámetros fecha_desde y fecha_hasta son obligatorios'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            fecha_desde = timezone.make_aware(
+                datetime.combine(datetime.strptime(fecha_desde_str, '%Y-%m-%d').date(), dt_time.min)
+            )
+            fecha_hasta = timezone.make_aware(
+                datetime.combine(datetime.strptime(fecha_hasta_str, '%Y-%m-%d').date(), dt_time.max)
+            )
+        except ValueError:
+            return Response({
+                'success': False,
+                'message': 'Formato de fecha inválido. Use YYYY-MM-DD'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = Ticket.objects.select_related(
+            'ticket_service',
+            'assigned_to',
+            'sub_program_name__program_name__client_name',
+        ).prefetch_related('reportedtime_set').filter(
+            create_at__gte=fecha_desde,
+            create_at__lte=fecha_hasta,
+        )
+
+        cliente = request.query_params.get('cliente')
+        if cliente:
+            queryset = queryset.filter(
+                sub_program_name__program_name__client_name__client_name=cliente
+            )
+
+        id_servicio = request.query_params.get('id_servicio')
+        if id_servicio:
+            try:
+                queryset = queryset.filter(ticket_service__id_services=int(id_servicio))
+            except ValueError:
+                return Response({
+                    'success': False,
+                    'message': 'id_servicio debe ser un número entero'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        network_user = request.query_params.get('network_user')
+        if network_user:
+            queryset = queryset.filter(assigned_to__network_user=network_user)
+
+        cumple_str = request.query_params.get('cumple')
+        if cumple_str is not None:
+            if cumple_str.lower() == 'true':
+                queryset = queryset.filter(cumplimiento=True)
+            elif cumple_str.lower() == 'false':
+                queryset = queryset.filter(cumplimiento=False)
+            else:
+                return Response({
+                    'success': False,
+                    'message': 'El parámetro cumple debe ser "true" o "false"'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = TicketReporteGeneralSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = TicketReporteGeneralSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='reporte-driver')
+    def reporte_driver(self, request):
+        """
+        Reporte driver: tickets agrupados por usuario E-User y cliente con métricas de ocupación.
+
+        Parámetros query:
+        - fecha_desde  (obligatorio): YYYY-MM-DD — inicio del rango (por date_reported)
+        - fecha_hasta  (obligatorio): YYYY-MM-DD — fin del rango (inclusive)
+        - cliente      (opcional): nombre exacto del cliente
+        - network_user (opcional): network_user del EUser asignado al ticket
+        """
+        from datetime import datetime, date as dt_date
+        from collections import defaultdict
+
+        fecha_desde_str = request.query_params.get('fecha_desde')
+        fecha_hasta_str = request.query_params.get('fecha_hasta')
+
+        if not fecha_desde_str or not fecha_hasta_str:
+            return Response(
+                {'detail': 'Los parámetros fecha_desde y fecha_hasta son obligatorios'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            fecha_desde = datetime.strptime(fecha_desde_str, '%Y-%m-%d').date()
+            fecha_hasta = datetime.strptime(fecha_hasta_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response(
+                {'detail': 'Formato de fecha inválido. Use YYYY-MM-DD'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        def time_to_seconds(t):
+            return t.hour * 3600 + t.minute * 60 + t.second
+
+        def seconds_to_str(total_seconds):
+            hours, remainder = divmod(int(total_seconds), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            return f'{hours:02}:{minutes:02}:{seconds:02}'
+
+        # All reported times in the period for tickets that have an assigned user.
+        # Filtered by the ticket's assigned_to (not the reporter) so that
+        # user_total_seconds spans all clients correctly.
+        rt_qs = ReportedTime.objects.filter(
+            date_reported__date__gte=fecha_desde,
+            date_reported__date__lte=fecha_hasta,
+            id_ticket__assigned_to__isnull=False,
+        ).select_related(
+            'id_ticket',
+            'id_ticket__assigned_to',
+            'id_ticket__sub_program_name__program_name__client_name',
+        )
+
+        network_user_filter = request.query_params.get('network_user')
+        if network_user_filter:
+            rt_qs = rt_qs.filter(
+                id_ticket__assigned_to__network_user=network_user_filter
+            )
+
+        # Single-pass aggregation
+        ticket_seconds = defaultdict(int)           # ticket_id -> seconds
+        user_client_seconds = defaultdict(int)      # (network_user, client) -> seconds
+        user_total_seconds = defaultdict(int)       # network_user -> seconds
+        ticket_info = {}                            # ticket_id -> Ticket instance
+        tickets_for_combo = defaultdict(set)        # (network_user, client) -> {ticket_ids}
+
+        for rt in rt_qs:
+            ticket = rt.id_ticket
+            euser = ticket.assigned_to
+            if not euser:
+                continue
+            try:
+                client_name = ticket.sub_program_name.program_name.client_name.client_name
+            except AttributeError:
+                continue
+
+            nu = euser.network_user
+            secs = time_to_seconds(rt.reported_time)
+
+            ticket_seconds[ticket.id_ticket] += secs
+            user_client_seconds[(nu, client_name)] += secs
+            user_total_seconds[nu] += secs
+            ticket_info[ticket.id_ticket] = ticket
+            tickets_for_combo[(nu, client_name)].add(ticket.id_ticket)
+
+        # Apply optional client filter to output only (not to aggregations so that
+        # user_total_seconds always reflects all clients)
+        cliente_filter = request.query_params.get('cliente')
+        if cliente_filter:
+            combos = {k: v for k, v in tickets_for_combo.items() if k[1] == cliente_filter}
+        else:
+            combos = tickets_for_combo
+
+        results = []
+        for (nu, client_name), ticket_ids in combos.items():
+            t_uc = user_client_seconds[(nu, client_name)]
+            t_total = user_total_seconds[nu]
+            porcentaje = round((t_uc / t_total) * 100, 1) if t_total > 0 else 0.0
+
+            for ticket_id in ticket_ids:
+                ticket = ticket_info[ticket_id]
+                euser = ticket.assigned_to
+                parts = [euser.name]
+                if euser.middle_name:
+                    parts.append(euser.middle_name)
+                parts.append(euser.last_name)
+                if euser.second_last_name:
+                    parts.append(euser.second_last_name)
+
+                results.append({
+                    'euser_nombre': ' '.join(parts),
+                    'network_user': nu,
+                    'cliente': client_name,
+                    'id_ticket': ticket_id,
+                    'ticket_title': ticket.ticket_title,
+                    'fecha_creacion': ticket.create_at,
+                    'fecha_cierre': ticket.closing_date,
+                    'fecha_estimada_cierre': ticket.estimated_closing_date,
+                    'tiempo_ticket': seconds_to_str(ticket_seconds[ticket_id]),
+                    'tiempo_usuario_cliente': seconds_to_str(t_uc),
+                    'porcentaje_cliente': porcentaje,
+                    'tiempo_total_usuario': seconds_to_str(t_total),
+                    'cumple': ticket.cumplimiento,
+                })
+
+        results.sort(key=lambda x: (x['network_user'], x['cliente'], x['id_ticket']))
+
+        page = self.paginate_queryset(results)
+        if page is not None:
+            serializer = TicketReporteDriverSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = TicketReporteDriverSerializer(results, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def backlog(self, request):
