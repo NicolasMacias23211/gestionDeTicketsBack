@@ -28,6 +28,7 @@ router.register(r'reported-times', ReportedTimeViewSet, basename='reported-time'
 router.register(r'notes', NoteViewSet, basename='note')
 router.register(r'working-hours', WorkingHoursViewSet, basename='working-hours')
 router.register(r'project-date', ProjectDateViewSet, basename='project-date')
+router.register(r'project-date/holidays', ProjectDateViewSet, basename='project-date')
 
 urlpatterns = [
     path('', include(router.urls)),
